@@ -1,3 +1,4 @@
+import { decode, encode } from "gpt-3-encoder";
 import Groq from "groq-sdk";
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -5,6 +6,18 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
   dangerouslyAllowBrowser: true,
 });
+
+const trimMessageToFit = (text: string, maxTokens: number): string => {
+  let encoded = encode(text);
+  if (encoded.length <= maxTokens) {
+    return text;
+  }
+
+  let trimmedEncoded = encoded.slice(0, maxTokens);
+  let trimmedText = decode(trimmedEncoded);
+
+  return trimmedText;
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,9 +27,14 @@ export default async function handler(
     const { jobDescription, currentLevel, currentStack, technologies } =
       req.body;
 
+    var jobDescriptionNew = trimMessageToFit(
+      jobDescription,
+      parseInt(process.env.MAX_TOKENS_AI ?? "8192") / 2
+    );
+
     const userPrompt = [
       "Você é um assistente útil com o intuito de ajudar desenvolvedores a traçar um plano de desenvolvimento com base em descrições de vagas.",
-      `Aqui está a descrição da vaga: ${jobDescription}.`,
+      `Aqui está a descrição da vaga: ${jobDescriptionNew}.`,
       currentLevel ? `O nível atual do candidato é: ${currentLevel}.` : "",
       currentStack ? `O stack atual do candidato é: ${currentStack}.` : "",
       technologies
@@ -40,7 +58,6 @@ export default async function handler(
 
       res.status(200).json({ analysis: response.choices[0].message.content });
     } catch (error) {
-      console.log("AQUI", error);
       res.status(500).json({ error: "Erro ao obter análise." });
     }
   } else {
