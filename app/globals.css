@@ -1,0 +1,22 @@
+/* globals.css */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif; 
+    overflow-x: hidden; 
+  }
+  
+  .layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content {
+    flex: 1;
+    padding: 24px;
+    background: #fff; 
+    min-height: 300px;
+    height: calc(100vh - 64px - 64px);
+  }
